@@ -1,5 +1,5 @@
 
-## Proje
+## Hava Durumu Tahmin Uygulaması
 
 - Şehir adıyla anlık sıcaklık, nem ve rüzgâr bilgisi.
 - Sunucu tarafı istekler ile API anahtarı güvende; TTL önbellek ile hızlı yanıt.
