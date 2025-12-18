@@ -1,12 +1,9 @@
 
-
-Next.js App Router ile OpenWeather’dan şehir bazlı hava durumu. Türkçe arayüz, premium tema, Açık/Koyu mod.
-
-
 ## Proje
 
 - Şehir adıyla anlık sıcaklık, nem ve rüzgâr bilgisi.
 - Sunucu tarafı istekler ile API anahtarı güvende; TTL önbellek ile hızlı yanıt.
+- Next.js App Router ile OpenWeather’dan şehir bazlı hava durumu. Türkçe arayüz, premium tema, Açık/Koyu mod.
 
 ## Mimari
 
