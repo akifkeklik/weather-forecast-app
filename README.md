@@ -1,8 +1,7 @@
-# Weather Forecast App
+<img width="1440" height="3120" alt="image" src="https://github.com/user-attachments/assets/dba5f274-52c8-4155-b703-871ab9d39c75" /># Weather Forecast App
 
 Next.js App Router ile OpenWeather’dan şehir bazlı hava durumu. Türkçe arayüz, premium tema, Açık/Koyu mod.
 
-<img src="public/screenshot.png" alt="Ekran Görüntüsü" style="max-width: 100%; border-radius: 16px;" />
 
 ## Proje
 
