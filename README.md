@@ -27,13 +27,13 @@ The application features a premium, responsive interface with Turkish localizati
   * Weather responses are cached for a configurable period.
   * Reduces unnecessary API requests and improves response times.
 
-* 🎨 **Premium UI**
+* 🎨 **Responsive Interface**
 
   * Modern and responsive design.
   * Turkish user interface.
   * Light and dark mode support.
 
-* 🏗️ **Clean Architecture**
+* 🏗️ **Layered Structure**
 
   * Separate controller, service, client, utility, and UI layers.
   * Built with Next.js App Router and TypeScript.
@@ -42,7 +42,7 @@ The application features a premium, responsive interface with Turkish localizati
 
 ## Architecture
 
-The project follows a simple layered architecture:
+The project uses a simple layered structure:
 
 ```text
 app/
