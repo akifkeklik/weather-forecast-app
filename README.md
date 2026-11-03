@@ -2,7 +2,7 @@
 
 A modern weather application built with **Next.js 14** that provides real-time weather information for any city using the **OpenWeather API**.
 
-The application features a premium, responsive interface with Turkish localization, light/dark mode support, server-side API requests, and TTL-based caching for faster responses and reduced API usage.
+The application features a responsive interface with Turkish localization, light/dark mode support, server-side API requests, and TTL-based caching for repeated city searches.
 
 ## Features
 
@@ -234,7 +234,7 @@ This helps:
 * Improve response times for repeated searches.
 * Reduce API usage.
 
-The cache duration can be adjusted through the environment variable.
+The cache duration can be adjusted through the environment variable. The cache is held in memory per running server process; it is not shared across serverless instances and may be cleared when an instance restarts.
 
 ---
 
@@ -281,7 +281,7 @@ This prevents the API key from being exposed in client-side JavaScript or browse
 │       └── logger.ts
 │
 ├── .env.example
-├── .env.example
+├── .env.local              # Local only; do not commit
 ├── package.json
 ├── tailwind.config.ts
 ├── tsconfig.json
