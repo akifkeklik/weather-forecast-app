@@ -281,7 +281,7 @@ This prevents the API key from being exposed in client-side JavaScript or browse
 │       └── logger.ts
 │
 ├── .env.example
-├── .env.local
+├── .env.example
 ├── package.json
 ├── tailwind.config.ts
 ├── tsconfig.json
@@ -293,4 +293,4 @@ This prevents the API key from being exposed in client-side JavaScript or browse
 ## License
 
 This project is intended for educational and development purposes.
-Add your preferred license here if the project is distributed publicly.
+No license file is currently included. All rights remain with the author unless a license is added.
