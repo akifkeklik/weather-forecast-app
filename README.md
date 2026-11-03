@@ -118,8 +118,8 @@ No additional global dependencies are required. All project dependencies are ins
 ### 1. Clone the repository
 
 ```bash
-git clone <your-repository-url>
-cd <your-project-directory>
+git clone https://github.com/akifkeklik/weather-forecast-app.git
+cd weather-forecast-app
 ```
 
 ### 2. Install dependencies
