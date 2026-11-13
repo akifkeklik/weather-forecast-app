@@ -4,6 +4,7 @@ import { ApiError, ErrorCodes } from "../utils/errors";
 import type { WeatherResponse } from "../types/accuweather";
 
 const inFlightRequests = new Map<string, Promise<WeatherResponse>>();
+const MAX_CONCURRENT_LOOKUPS = 50;
 
 export async function getWeatherByCity(city: string): Promise<WeatherResponse> {
   const trimmed = typeof city === "string" ? city.trim() : "";
@@ -23,6 +24,14 @@ export async function getWeatherByCity(city: string): Promise<WeatherResponse> {
   // Coalesce concurrent lookups for the same city into one provider request.
   const existingRequest = inFlightRequests.get(key);
   if (existingRequest) return existingRequest;
+
+  if (inFlightRequests.size >= MAX_CONCURRENT_LOOKUPS) {
+    throw new ApiError(
+      ErrorCodes.RATE_LIMITED,
+      503,
+      "The weather service is handling too many requests. Please retry shortly."
+    );
+  }
 
   const request = fetchCurrentByCity(trimmed)
     .then((data) => {
