@@ -1,296 +1,179 @@
-# Weather Forecast Application
+# Weather Dashboard
 
-A modern weather application built with **Next.js 14** that provides real-time weather information for any city using the **OpenWeather API**.
+A small full-stack weather dashboard built with Next.js App Router, React, and TypeScript. It retrieves current conditions for a city from OpenWeather and keeps the provider credential on the server.
 
-The application features a responsive interface with Turkish localization, light/dark mode support, server-side API requests, and TTL-based caching for repeated city searches.
+This is a portfolio project focused on clear request boundaries, typed data handling, resilient API integration, and a responsive Turkish-language interface.
 
-## Features
+## What it does
 
-* 🌡️ **Real-time Weather Data**
+- Searches current weather by city.
+- Displays temperature, condition, humidity, wind speed, and the provider's observation time.
+- Supports light and dark themes.
+- Calls OpenWeather only from the server-side API client; the API key is not sent to the browser.
+- Uses an in-memory TTL cache with a maximum of 500 entries per application process.
+- Coalesces simultaneous requests for the same city and limits concurrent upstream lookups.
+- Applies an upstream request timeout and maps provider/network failures to controlled API errors.
+- Cancels superseded browser requests and validates API response data before rendering.
 
-  * Current temperature
-  * Humidity
-  * Wind speed
-  * Weather conditions
-
-* 🔍 **City-based Search**
-
-  * Search for weather information by city name.
-
-* 🔐 **Secure API Integration**
-
-  * OpenWeather API requests are handled server-side.
-  * The API key is never exposed to the client.
-
-* ⚡ **TTL Caching**
-
-  * Weather responses are cached for a configurable period.
-  * Reduces unnecessary API requests and improves response times.
-
-* 🎨 **Responsive Interface**
-
-  * Modern and responsive design.
-  * Turkish user interface.
-  * Light and dark mode support.
-
-* 🏗️ **Layered Structure**
-
-  * Separate controller, service, client, utility, and UI layers.
-  * Built with Next.js App Router and TypeScript.
-
----
+> This application currently retrieves **current weather**, not multi-day forecasts. The cache is process-local and is not shared between multiple server instances.
 
 ## Architecture
 
-The project uses a simple layered structure:
-
 ```text
-app/
-├── api/
-│   └── weather/
-│       └── route.ts          # API controller
-│
-├── page.tsx                  # Main UI
-│
-lib/
-├── clients/
-│   └── openweather.ts        # OpenWeather API client
-│
-├── services/
-│   └── weather.ts            # Weather business logic
-│
-└── utils/
-    ├── cache.ts              # TTL cache utilities
-    └── logger.ts             # Application logging
+Browser
+  |
+  | GET /api/weather?city=Izmir
+  v
+Next.js Route Handler
+  |
+  v
+Weather Service --------------------+
+  |                                 |
+  | cache hit                       | cache miss
+  v                                 v
+Cached response               OpenWeather client
+                                    |
+                                    v
+                              OpenWeather API
+
+Client UI:
+  Page -> useWeather hook -> typed SearchBar / WeatherCard
 ```
 
-### Main Components
+| Layer | Location | Responsibility |
+| --- | --- | --- |
+| Route handler | `app/api/weather/route.ts` | HTTP boundary and error response |
+| Service | `lib/services/weather.ts` | Input validation, cache lookup, request coalescing |
+| Provider client | `lib/clients/openweather.ts` | External HTTP call, timeout, provider response validation |
+| Cache | `lib/utils/cache.ts` | Bounded in-memory TTL/LRU cache |
+| Types | `lib/types/accuweather.ts` | Shared response and error contracts |
+| UI hook | `app/hooks/useWeather.ts` | Request lifecycle, cancellation, client-side validation |
+| Components | `app/components` | Search form, weather result, theme controls |
 
-| Component  | Location                     | Responsibility                            |
-| ---------- | ---------------------------- | ----------------------------------------- |
-| Controller | `app/api/weather/route.ts`   | Handles incoming weather API requests     |
-| Service    | `lib/services/weather.ts`    | Contains weather-related business logic   |
-| API Client | `lib/clients/openweather.ts` | Communicates with the OpenWeather API     |
-| Cache      | `lib/utils/cache.ts`         | Handles TTL-based caching                 |
-| Logger     | `lib/utils/logger.ts`        | Provides application logging              |
-| UI         | `app/page.tsx`               | Renders the weather application interface |
+## Technology
 
----
-
-## Tech Stack
-
-### Frontend
-
-* **Next.js 14** – App Router
-* **React 18**
-* **TypeScript 5**
-* **Tailwind CSS**
-
-### Backend
-
-* **Next.js API Routes**
-* **OpenWeather REST API**
-* **Axios** – HTTP client
-
-### Development Tools
-
-* **ESLint**
-* **PostCSS**
-* **Autoprefixer**
-
----
+- Next.js App Router
+- React
+- TypeScript (strict mode)
+- OpenWeather Current Weather API
+- CSS / Tailwind utility classes
+- ESLint configuration
 
 ## Requirements
 
-Make sure you have the following installed:
+- Node.js 20.9 or newer
+- npm
 
-* **Node.js 18+**
+## Getting started
 
-  * Node.js 20+ is recommended.
-* **npm 10+**
+1. Clone the repository:
 
-No additional global dependencies are required. All project dependencies are installed automatically with `npm install`.
+   ```bash
+   git clone https://github.com/akifkeklik/weather-forecast-app.git
+   cd weather-forecast-app
+   ```
 
----
+2. Install the exact dependency versions from the lockfile:
 
-## Installation
+   ```bash
+   npm ci
+   ```
 
-### 1. Clone the repository
+3. Create a local environment file:
 
-```bash
-git clone https://github.com/akifkeklik/weather-forecast-app.git
-cd weather-forecast-app
-```
+   **PowerShell**
+   ```powershell
+   Copy-Item .env.example .env.local
+   ```
 
-### 2. Install dependencies
+   **macOS / Linux**
+   ```bash
+   cp .env.example .env.local
+   ```
 
-```bash
-npm install
-```
+4. Add your OpenWeather API key to `.env.local`:
 
-### 3. Configure environment variables
+   ```env
+   OPENWEATHER_API_KEY=your_api_key
+   WEATHER_CACHE_TTL_MINUTES=30
+   LOG_LEVEL=info
+   ```
 
-Copy the example environment file:
+   Obtain a key from [OpenWeather](https://openweathermap.org/api). Never commit `.env.local` or expose the key through a `NEXT_PUBLIC_*` variable.
 
-```bash
-cp .env.example .env.local
-```
+5. Start the development server:
 
-Then add your OpenWeather API key to `.env.local`:
+   ```bash
+   npm run dev
+   ```
 
-```env
-OPENWEATHER_API_KEY=your_api_key_here
-WEATHER_CACHE_TTL_MINUTES=30
-LOG_LEVEL=info
-```
+   Open [http://localhost:3000](http://localhost:3000).
 
-> **Important:** Never commit `.env.local` or your API key to the repository.
-
----
-
-## Running the Application
-
-### Development
-
-Start the development server:
+## Production build
 
 ```bash
-npm run dev
-```
-
-The application will be available at:
-
-```text
-http://127.0.0.1:3000
-```
-
-### Production
-
-Build the application:
-
-```bash
+npm run typecheck
 npm run build
-```
-
-Then start the production server:
-
-```bash
 npm start
 ```
 
----
-
 ## API
 
-The application exposes a server-side weather endpoint:
+### `GET /api/weather?city={city}`
 
-```text
-GET /api/weather?city={city}
-```
-
-### Example
+Example:
 
 ```bash
-curl "http://127.0.0.1:3000/api/weather?city=Izmir"
+curl "http://localhost:3000/api/weather?city=Izmir"
 ```
 
-The request is processed by the Next.js API route, which communicates with OpenWeather on the server.
+Successful response:
 
-This approach keeps the OpenWeather API key hidden from the client.
-
----
-
-## Environment Variables
-
-| Variable                    | Description                        | Example             |
-| --------------------------- | ---------------------------------- | ------------------- |
-| `OPENWEATHER_API_KEY`       | OpenWeather API authentication key | `your_api_key_here` |
-| `WEATHER_CACHE_TTL_MINUTES` | Cache duration in minutes          | `30`                |
-| `LOG_LEVEL`                 | Application logging level          | `info`              |
-
-Example `.env.local`:
-
-```env
-OPENWEATHER_API_KEY=your_api_key_here
-WEATHER_CACHE_TTL_MINUTES=30
-LOG_LEVEL=info
+```json
+{
+  "city": "Izmir",
+  "temperature": 22,
+  "weatherText": "clear sky",
+  "humidity": 48,
+  "windSpeed": 10,
+  "observationTime": "2026-11-14T10:00:00.000Z"
+}
 ```
 
----
+The values above are illustrative; live values depend on the provider response.
 
-## Caching
+| Status | Meaning |
+| --- | --- |
+| `200` | Current weather returned |
+| `400` | Missing or invalid city |
+| `404` | City not found by provider |
+| `429` | Provider rate limit |
+| `502` | Provider/network failure or invalid upstream response |
+| `503` | Local concurrent lookup limit reached |
+| `500` | Server configuration or unexpected error |
 
-Weather responses are stored in a TTL-based cache.
+Responses use `Cache-Control: no-store` at the HTTP layer because freshness is managed explicitly by the service cache.
 
-By default, cached weather data remains available for **30 minutes**:
+## Configuration
 
-```env
-WEATHER_CACHE_TTL_MINUTES=30
-```
+| Variable | Required | Default | Purpose |
+| --- | --- | --- | --- |
+| `OPENWEATHER_API_KEY` | Yes | — | Server-side provider credential |
+| `WEATHER_CACHE_TTL_MINUTES` | No | `30` | In-memory cache lifetime |
+| `LOG_LEVEL` | No | `info` | Application log verbosity |
 
-This helps:
+## Engineering notes and trade-offs
 
-* Reduce unnecessary requests to OpenWeather.
-* Improve response times for repeated searches.
-* Reduce API usage.
+- **Process-local cache:** the cache is bounded to 500 entries and uses TTL plus least-recently-used eviction. It is suitable for a small single-instance deployment, not a horizontally scaled production system. A shared Redis cache would be needed for cross-instance consistency.
+- **Request coalescing:** concurrent lookups for the same normalized city share one upstream request. A limit of 50 distinct in-flight lookups protects the provider integration from unbounded concurrency within one process.
+- **Cancellation:** when a user starts a new search, the previous browser request is aborted. This prevents stale responses from replacing newer results.
+- **Validation:** provider payloads and browser-facing responses are checked before use; external API errors are not forwarded verbatim.
+- **Freshness:** the timestamp shown is the observation timestamp supplied by the weather provider, not the time the browser requested the data.
 
-The cache duration can be adjusted through the environment variable. The cache is held in memory per running server process; it is not shared across serverless instances and may be cleared when an instance restarts.
+## Current scope
 
----
-
-## Security
-
-The OpenWeather API key is kept exclusively on the server.
-
-Instead of calling OpenWeather directly from the browser:
-
-```text
-Browser
-   │
-   ▼
-Next.js API Route
-   │
-   ▼
-Weather Service
-   │
-   ▼
-OpenWeather API
-```
-
-This prevents the API key from being exposed in client-side JavaScript or browser network requests.
-
----
-
-## Project Structure
-
-```text
-.
-├── app/
-│   ├── api/
-│   │   └── weather/
-│   │       └── route.ts
-│   └── page.tsx
-│
-├── lib/
-│   ├── clients/
-│   │   └── openweather.ts
-│   ├── services/
-│   │   └── weather.ts
-│   └── utils/
-│       ├── cache.ts
-│       └── logger.ts
-│
-├── .env.example
-├── .env.local              # Local only; do not commit
-├── package.json
-├── tailwind.config.ts
-├── tsconfig.json
-└── README.md
-```
-
----
+The project demonstrates a focused current-weather workflow. It does not currently provide multi-day forecasting, persistent/distributed caching, user accounts, or a production observability stack. Those are deliberate scope boundaries rather than claimed features.
 
 ## License
 
-This project is intended for educational and development purposes.
 No license file is currently included. All rights remain with the author unless a license is added.
