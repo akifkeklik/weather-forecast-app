@@ -61,7 +61,7 @@ Client UI:
 
 ## Requirements
 
-- Node.js 20.9 or newer
+- Node.js 24 or newer (the CI pipeline uses Node 24)
 - npm
 
 ## Getting started
@@ -112,6 +112,7 @@ Client UI:
 ## Production build
 
 ```bash
+npm run lint
 npm run typecheck
 npm run build
 npm start
