@@ -34,6 +34,10 @@ class CacheManager {
       return null;
     }
 
+    // Refresh insertion order on reads so eviction is least-recently-used, not FIFO.
+    this.store.delete(key);
+    this.store.set(key, entry);
+
     return entry.data;
   }
 
