@@ -1,17 +1,24 @@
+import type { WeatherResponse } from "../types/accuweather";
 import { ApiError, ErrorCodes } from "../utils/errors";
 
-export type OpenWeatherNormalized = {
-  city: string;
-  temperature: number;
-  weatherText: string;
-  humidity: number;
-  windSpeed: number;
-  observationTime: string;
+type OpenWeatherPayload = {
+  name?: unknown;
+  main?: {
+    temp?: unknown;
+    humidity?: unknown;
+  };
+  weather?: Array<{
+    description?: unknown;
+  }>;
+  wind?: {
+    speed?: unknown;
+  };
+  dt?: unknown;
 };
 
 const BASE = "https://api.openweathermap.org/data/2.5/weather";
 
-export async function fetchCurrentByCity(city: string): Promise<OpenWeatherNormalized> {
+export async function fetchCurrentByCity(city: string): Promise<WeatherResponse> {
   const key = process.env.OPENWEATHER_API_KEY || process.env.WEATHER_API_KEY;
 
   if (!key) {
@@ -38,7 +45,7 @@ export async function fetchCurrentByCity(city: string): Promise<OpenWeatherNorma
     );
   }
 
-  const raw: any = await response.json().catch(() => null);
+  const raw: unknown = await response.json().catch(() => null);
 
   if (!response.ok) {
     if (response.status === 404) {
@@ -62,12 +69,22 @@ export async function fetchCurrentByCity(city: string): Promise<OpenWeatherNorma
     );
   }
 
-  const temperature = raw?.main?.temp;
-  const humidity = raw?.main?.humidity;
+  const payload = raw as OpenWeatherPayload | null;
+  const temperature = payload?.main?.temp;
+  const humidity = payload?.main?.humidity;
+  const windSpeed = payload?.wind?.speed;
+  const description = payload?.weather?.[0]?.description;
+
   if (
-    typeof raw?.name !== "string" ||
+    typeof payload?.name !== "string" ||
     typeof temperature !== "number" ||
-    typeof humidity !== "number"
+    !Number.isFinite(temperature) ||
+    typeof humidity !== "number" ||
+    !Number.isFinite(humidity) ||
+    humidity < 0 ||
+    humidity > 100 ||
+    (windSpeed !== undefined &&
+      (typeof windSpeed !== "number" || !Number.isFinite(windSpeed)))
   ) {
     throw new ApiError(
       ErrorCodes.EMPTY_RESPONSE,
@@ -77,13 +94,13 @@ export async function fetchCurrentByCity(city: string): Promise<OpenWeatherNorma
   }
 
   return {
-    city: raw.name,
+    city: payload.name,
     temperature: Math.round(temperature),
-    weatherText: raw.weather?.[0]?.description ?? "Unknown",
+    weatherText: typeof description === "string" ? description : "Unknown",
     humidity,
-    windSpeed: Math.round((raw.wind?.speed ?? 0) * 3.6),
+    windSpeed: Math.round((typeof windSpeed === "number" ? windSpeed : 0) * 3.6),
     observationTime: new Date(
-      (typeof raw.dt === "number" ? raw.dt : Date.now() / 1000) * 1000
+      (typeof payload.dt === "number" ? payload.dt : Date.now() / 1000) * 1000
     ).toISOString(),
   };
 }
