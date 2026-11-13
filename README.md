@@ -57,7 +57,7 @@ Client UI:
 - TypeScript (strict mode)
 - OpenWeather Current Weather API
 - CSS / Tailwind utility classes
-- ESLint configuration
+- ESLint 9 and Vitest
 
 ## Requirements
 
@@ -112,6 +112,7 @@ Client UI:
 ## Production build
 
 ```bash
+npm test
 npm run lint
 npm run typecheck
 npm run build
@@ -154,6 +155,16 @@ The values above are illustrative; live values depend on the provider response.
 | `500` | Server configuration or unexpected error |
 
 Responses use `Cache-Control: no-store` at the HTTP layer because freshness is managed explicitly by the service cache.
+
+## Automated tests
+
+Run the unit tests with:
+
+```bash
+npm test
+```
+
+The Vitest suite covers cache TTL expiry, LRU eviction, invalid cache configuration, city input validation, cache reuse, concurrent request coalescing, and the upstream concurrency limit.
 
 ## Configuration
 
