@@ -28,6 +28,8 @@ function getThemeSnapshot(): Theme {
     // Storage may be unavailable in privacy-restricted browser contexts.
   }
 
+  if (memoryTheme) return memoryTheme;
+
   return window.matchMedia("(prefers-color-scheme: dark)").matches
     ? "dark"
     : "light";
@@ -64,6 +66,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       theme,
       toggle: () => {
         const nextTheme = theme === "light" ? "dark" : "light";
+        memoryTheme = nextTheme;
         try {
           window.localStorage.setItem(THEME_KEY, nextTheme);
         } catch {
