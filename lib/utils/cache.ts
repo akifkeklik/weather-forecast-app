@@ -1,6 +1,6 @@
 import { CacheEntry } from "../types/accuweather";
 
-class CacheManager {
+export class CacheManager {
   private store = new Map<string, CacheEntry<unknown>>();
   private readonly ttlMinutes: number;
   private readonly maxEntries: number;
