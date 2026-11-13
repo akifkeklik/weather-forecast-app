@@ -5,6 +5,28 @@ import type { WeatherResponse } from "@/lib/types/accuweather";
 
 export type WeatherData = WeatherResponse;
 
+function isWeatherResponse(value: unknown): value is WeatherResponse {
+  if (typeof value !== "object" || value === null) return false;
+
+  const candidate = value as Record<string, unknown>;
+  return (
+    typeof candidate.city === "string" &&
+    candidate.city.length > 0 &&
+    typeof candidate.temperature === "number" &&
+    Number.isFinite(candidate.temperature) &&
+    typeof candidate.humidity === "number" &&
+    Number.isFinite(candidate.humidity) &&
+    candidate.humidity >= 0 &&
+    candidate.humidity <= 100 &&
+    typeof candidate.windSpeed === "number" &&
+    Number.isFinite(candidate.windSpeed) &&
+    candidate.windSpeed >= 0 &&
+    typeof candidate.weatherText === "string" &&
+    typeof candidate.observationTime === "string" &&
+    Number.isFinite(Date.parse(candidate.observationTime))
+  );
+}
+
 export function useWeather() {
   const [data, setData] = useState<WeatherData | null>(null);
   const [loading, setLoading] = useState(false);
@@ -12,7 +34,10 @@ export function useWeather() {
   const activeRequest = useRef<AbortController | null>(null);
 
   useEffect(() => {
-    return () => activeRequest.current?.abort();
+    return () => {
+      activeRequest.current?.abort();
+      activeRequest.current = null;
+    };
   }, []);
 
   async function fetchWeather(city: string) {
@@ -47,27 +72,12 @@ export function useWeather() {
         throw new Error(message);
       }
 
-      if (
-        typeof payload !== "object" ||
-        payload === null ||
-        !("city" in payload) ||
-        typeof payload.city !== "string" ||
-        !("temperature" in payload) ||
-        typeof payload.temperature !== "number" ||
-        !("humidity" in payload) ||
-        typeof payload.humidity !== "number" ||
-        !("windSpeed" in payload) ||
-        typeof payload.windSpeed !== "number" ||
-        !("weatherText" in payload) ||
-        typeof payload.weatherText !== "string" ||
-        !("observationTime" in payload) ||
-        typeof payload.observationTime !== "string"
-      ) {
+      if (!isWeatherResponse(payload)) {
         throw new Error("Sunucudan geçersiz hava durumu verisi alındı.");
       }
 
       if (!controller.signal.aborted) {
-        setData(payload as WeatherData);
+        setData(payload);
       }
     } catch (error: unknown) {
       if (controller.signal.aborted) return;
