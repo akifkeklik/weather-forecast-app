@@ -15,12 +15,12 @@ export default function Page() {
           <div className="flex items-start justify-between gap-4">
             <div className="space-y-3">
               <span className="hero-chip">
-                Canlı veri · /api/weather
+                Weather API · /api/weather
               </span>
               <h1>
                 Premium Hava Durumu
                 <span className="pill">
-                  Gerçek zamanlı · Anlık sorgu
+                  OpenWeather · Güncel gözlem
                 </span>
               </h1>
               <p className="muted-text">
