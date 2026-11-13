@@ -17,7 +17,7 @@ export async function getWeatherByCity(city: string): Promise<WeatherResponse> {
     throw new ApiError(ErrorCodes.INVALID_CITY, 400, "City name is invalid.");
   }
 
-  const key = trimmed.toLocaleLowerCase("tr-TR");
+  const key = trimmed.toLowerCase();
   const cached = weatherCache.get<WeatherResponse>(key);
   if (cached) return cached;
 
