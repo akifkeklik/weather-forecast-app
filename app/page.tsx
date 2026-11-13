@@ -24,7 +24,7 @@ export default function Page() {
                 </span>
               </h1>
               <p className="muted-text">
-                Şehir adını yaz, anlık sıcaklık, nem ve rüzgar bilgisine ışık hızında ulaş. Açık/Koyu mod ile gözünü yorma.
+                Şehir adını ara; sıcaklık, nem ve rüzgar ölçümlerini tek ekranda görüntüle. Açık ve koyu tema desteğiyle.
               </p>
             </div>
             <ThemeToggle />
@@ -63,7 +63,7 @@ export default function Page() {
               </div>
               <div className="metric-chip">
                 <span className="label">Yanıt süresi</span>
-                <span className="value">ms seviyesinde</span>
+                <span className="value">Ağ koşullarına bağlı</span>
               </div>
               <div className="metric-chip">
                 <span className="label">Önbellek</span>
@@ -71,7 +71,7 @@ export default function Page() {
               </div>
               <div className="metric-chip">
                 <span className="label">Durum</span>
-                <span className="value">Anlık güncel</span>
+                <span className="value">Sağlayıcı gözlemi</span>
               </div>
             </div>
             <a className="primary-button" href="https://home.openweathermap.org/" target="_blank" rel="noreferrer">
