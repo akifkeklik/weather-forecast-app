@@ -16,6 +16,8 @@ export async function GET(req: Request) {
     });
   } catch (error: unknown) {
     const { statusCode, body } = createErrorResponse(error);
-    return NextResponse.json(body, { status: statusCode });
+    const headers: Record<string, string> = { "Cache-Control": "no-store" };
+    if (statusCode === 503) headers["Retry-After"] = "1";
+    return NextResponse.json(body, { status: statusCode, headers });
   }
 }
