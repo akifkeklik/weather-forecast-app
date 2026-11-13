@@ -84,7 +84,9 @@ export async function fetchCurrentByCity(city: string): Promise<WeatherResponse>
     humidity < 0 ||
     humidity > 100 ||
     (windSpeed !== undefined &&
-      (typeof windSpeed !== "number" || !Number.isFinite(windSpeed)))
+      (typeof windSpeed !== "number" || !Number.isFinite(windSpeed) || windSpeed < 0)) ||
+    (payload.dt !== undefined &&
+      (typeof payload.dt !== "number" || !Number.isFinite(payload.dt)))
   ) {
     throw new ApiError(
       ErrorCodes.EMPTY_RESPONSE,
