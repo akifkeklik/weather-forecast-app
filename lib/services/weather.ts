@@ -18,7 +18,7 @@ export async function getWeatherByCity(city: string): Promise<WeatherResponse> {
   }
 
   const key = trimmed.toLocaleLowerCase("tr-TR");
-  const cached = weatherCache.get(key);
+  const cached = weatherCache.get<WeatherResponse>(key);
   if (cached) return cached;
 
   // Coalesce concurrent lookups for the same city into one provider request.
