@@ -18,6 +18,7 @@ type ThemeContextValue = {
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 const THEME_KEY = "wf-theme";
 const THEME_CHANGE_EVENT = "wf-theme-change";
+let memoryTheme: Theme | null = null;
 
 function getThemeSnapshot(): Theme {
   try {
