@@ -1,6 +1,6 @@
 "use client";
 
-import type { WeatherResponse } from "@/lib/types/accuweather";
+import type { WeatherResponse } from "@/lib/types/weather";
 
 type WeatherCardProps = {
   data: WeatherResponse;

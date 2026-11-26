@@ -1,10 +1,26 @@
-import { fetchCurrentByCity } from "../clients/openweather";
+import { fetchCurrentByCity, fetchForecastByCity } from "../clients/openweather";
 import { weatherCache } from "../utils/cache";
 import { ApiError, ErrorCodes } from "../utils/errors";
-import type { WeatherResponse } from "../types/accuweather";
+import { logger } from "../utils/logger";
+import { toDailyForecast } from "./forecast";
+import type { DailyForecast, WeatherResponse } from "../types/weather";
 
 const inFlightRequests = new Map<string, Promise<WeatherResponse>>();
 const MAX_CONCURRENT_LOOKUPS = 50;
+
+async function forecastOrNull(city: string): Promise<DailyForecast[] | null> {
+  try {
+    const { slots, offsetSeconds } = await fetchForecastByCity(city);
+    return toDailyForecast(slots, offsetSeconds, Date.now() / 1000);
+  } catch (error) {
+    // The forecast is extra; a failure here must not hide the current weather.
+    logger.warn("Forecast lookup failed", {
+      city,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return null;
+  }
+}
 
 export async function getWeatherByCity(city: string): Promise<WeatherResponse> {
   const trimmed = typeof city === "string" ? city.trim() : "";
@@ -33,9 +49,11 @@ export async function getWeatherByCity(city: string): Promise<WeatherResponse> {
     );
   }
 
-  const request = fetchCurrentByCity(trimmed)
-    .then((data) => {
-      weatherCache.set(key, data);
+  const request = Promise.all([fetchCurrentByCity(trimmed), forecastOrNull(trimmed)])
+    .then(([current, forecast]) => {
+      const data: WeatherResponse = { ...current, forecast: forecast ?? [] };
+      // A degraded answer is not cached, so the next search can still get the forecast.
+      if (forecast) weatherCache.set(key, data);
       return data;
     })
     .finally(() => {

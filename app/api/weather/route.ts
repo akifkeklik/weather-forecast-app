@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getWeatherByCity } from "@/lib/services/weather";
 import { createErrorResponse } from "@/lib/utils/errors";
+import { logger } from "@/lib/utils/logger";
 
 export const dynamic = "force-dynamic";
 
@@ -16,6 +17,13 @@ export async function GET(req: Request) {
     });
   } catch (error: unknown) {
     const { statusCode, body } = createErrorResponse(error);
+    if (statusCode >= 500) {
+      logger.error(
+        "Weather request failed",
+        { code: body.code, statusCode },
+        error instanceof Error ? error : undefined
+      );
+    }
     const headers: Record<string, string> = { "Cache-Control": "no-store" };
     if (statusCode === 503) headers["Retry-After"] = "1";
     return NextResponse.json(body, { status: statusCode, headers });

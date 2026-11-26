@@ -66,6 +66,9 @@ class Logger {
   }
 }
 
-export const logger = new Logger(
-  (process.env.LOG_LEVEL as LogLevel) || 'info'
-);
+const configuredLevel = process.env.LOG_LEVEL;
+const isLevel = (value: unknown): value is LogLevel =>
+  value === 'error' || value === 'warn' || value === 'info' || value === 'debug';
+
+// An unknown LOG_LEVEL falls back to info instead of silently logging nothing.
+export const logger = new Logger(isLevel(configuredLevel) ? configuredLevel : 'info');
