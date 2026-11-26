@@ -1,11 +1,29 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import type { WeatherResponse } from "@/lib/types/accuweather";
+import type { DailyForecast, WeatherResponse } from "@/lib/types/weather";
 
 export type WeatherData = WeatherResponse;
 
-function isWeatherResponse(value: unknown): value is WeatherResponse {
+function isDailyForecast(value: unknown): value is DailyForecast {
+  if (typeof value !== "object" || value === null) return false;
+  const day = value as Record<string, unknown>;
+  return (
+    typeof day.date === "string" &&
+    /^\d{4}-\d{2}-\d{2}$/.test(day.date) &&
+    typeof day.min === "number" &&
+    Number.isFinite(day.min) &&
+    typeof day.max === "number" &&
+    Number.isFinite(day.max) &&
+    typeof day.weatherText === "string" &&
+    typeof day.condition === "string" &&
+    typeof day.precipitationChance === "number" &&
+    day.precipitationChance >= 0 &&
+    day.precipitationChance <= 100
+  );
+}
+
+export function isWeatherResponse(value: unknown): value is WeatherResponse {
   if (typeof value !== "object" || value === null) return false;
 
   const candidate = value as Record<string, unknown>;
@@ -23,7 +41,9 @@ function isWeatherResponse(value: unknown): value is WeatherResponse {
     candidate.windSpeed >= 0 &&
     typeof candidate.weatherText === "string" &&
     typeof candidate.observationTime === "string" &&
-    Number.isFinite(Date.parse(candidate.observationTime))
+    Number.isFinite(Date.parse(candidate.observationTime)) &&
+    Array.isArray(candidate.forecast) &&
+    candidate.forecast.every(isDailyForecast)
   );
 }
 

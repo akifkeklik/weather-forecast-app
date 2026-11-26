@@ -1,13 +1,15 @@
 # Weather Dashboard
 
-A small full-stack weather dashboard built with Next.js App Router, React, and TypeScript. It retrieves current conditions for a city from OpenWeather and keeps the provider credential on the server.
+A small full-stack weather dashboard built with Next.js App Router, React, and TypeScript. It shows current conditions and a five-day forecast for a city from OpenWeather and keeps the provider credential on the server.
 
 This is a portfolio project focused on clear request boundaries, typed data handling, resilient API integration, and a responsive Turkish-language interface.
 
 ## What it does
 
-- Searches current weather by city.
+- Searches weather by city.
 - Displays temperature, condition, humidity, wind speed, and the provider's observation time.
+- Shows a five-day forecast: daily low and high, condition and chance of precipitation, grouped by the city's own calendar day.
+- Weather descriptions come back in Turkish (`lang=tr`) to match the interface.
 - Supports light and dark themes.
 - Calls OpenWeather only from the server-side API client; the API key is not sent to the browser.
 - Uses an in-memory TTL cache with a maximum of 500 entries per application process.
@@ -15,7 +17,7 @@ This is a portfolio project focused on clear request boundaries, typed data hand
 - Applies an upstream request timeout and maps provider/network failures to controlled API errors.
 - Cancels superseded browser requests and validates API response data before rendering.
 
-> This application currently retrieves **current weather**, not multi-day forecasts. The cache is process-local and is not shared between multiple server instances.
+> The cache is process-local and is not shared between multiple server instances.
 
 ## Architecture
 
@@ -44,18 +46,19 @@ Client UI:
 | --- | --- | --- |
 | Route handler | `app/api/weather/route.ts` | HTTP boundary and error response |
 | Service | `lib/services/weather.ts` | Input validation, cache lookup, request coalescing |
-| Provider client | `lib/clients/openweather.ts` | External HTTP call, timeout, provider response validation |
+| Provider client | `lib/clients/openweather.ts` | Current and forecast calls, timeout, provider response validation |
+| Forecast | `lib/services/forecast.ts` | Turns 3-hour slots into days in the city's time zone |
 | Cache | `lib/utils/cache.ts` | Bounded in-memory TTL/LRU cache |
-| Types | `lib/types/accuweather.ts` | Shared response and error contracts |
+| Types | `lib/types/weather.ts` | Shared response and error contracts |
 | UI hook | `app/hooks/useWeather.ts` | Request lifecycle, cancellation, client-side validation |
-| Components | `app/components` | Search form, weather result, theme controls |
+| Components | `app/components` | Search form, current weather, forecast, theme controls |
 
 ## Technology
 
 - Next.js App Router
 - React
 - TypeScript (strict mode)
-- OpenWeather Current Weather API
+- OpenWeather Current Weather and 5 day / 3 hour Forecast APIs (free plan)
 - CSS / Tailwind utility classes
 - ESLint 9 and Vitest
 
@@ -135,10 +138,20 @@ Successful response:
 {
   "city": "Izmir",
   "temperature": 22,
-  "weatherText": "clear sky",
+  "weatherText": "açık",
   "humidity": 48,
   "windSpeed": 10,
-  "observationTime": "2026-11-14T10:00:00.000Z"
+  "observationTime": "2026-11-14T10:00:00.000Z",
+  "forecast": [
+    {
+      "date": "2026-11-15",
+      "min": 14,
+      "max": 23,
+      "weatherText": "parçalı bulutlu",
+      "condition": "Clouds",
+      "precipitationChance": 20
+    }
+  ]
 }
 ```
 
@@ -146,7 +159,7 @@ The values above are illustrative; live values depend on the provider response.
 
 | Status | Meaning |
 | --- | --- |
-| `200` | Current weather returned |
+| `200` | Current weather returned; `forecast` is empty if only the forecast call failed |
 | `400` | Missing or invalid city |
 | `404` | City not found by provider |
 | `429` | Provider rate limit |
@@ -164,7 +177,7 @@ Run the unit tests with:
 npm test
 ```
 
-The Vitest suite covers cache TTL expiry, LRU eviction, invalid cache configuration, city input validation, cache reuse, concurrent request coalescing, and the upstream concurrency limit.
+The Vitest suite (25 tests) covers cache TTL expiry and LRU eviction, city input validation, cache reuse, request coalescing and the concurrency limit, the OpenWeather client (status mapping, no key leaks, malformed payloads), grouping forecast slots into local days, the degraded path when only the forecast fails, and the browser-side response check.
 
 ## Configuration
 
@@ -181,11 +194,13 @@ The Vitest suite covers cache TTL expiry, LRU eviction, invalid cache configurat
 - **Cancellation:** when a user starts a new search, the previous browser request is aborted. This prevents stale responses from replacing newer results.
 - **Validation:** provider payloads and browser-facing responses are checked before use; external API errors are not forwarded verbatim.
 - **Freshness:** the timestamp shown is the observation timestamp supplied by the weather provider, not the time the browser requested the data.
+- **Forecast days:** OpenWeather's free forecast is 40 three-hour slots. They are grouped by the city's local date (using the offset the provider returns), today is left to the current-weather card, and a day with fewer than four slots is dropped instead of showing a misleading low and high. The day's description comes from the slot nearest local noon.
+- **Partial failure:** current weather and forecast are fetched in parallel. If only the forecast fails, the current weather is still returned, the failure is logged, and the answer is not cached so the next search tries again.
 
 ## Current scope
 
-The project demonstrates a focused current-weather workflow. It does not currently provide multi-day forecasting, persistent/distributed caching, user accounts, or a production observability stack. Those are deliberate scope boundaries rather than claimed features.
+It does not provide hourly charts, location search by coordinates, persistent or distributed caching, user accounts, or a production observability stack. Those are deliberate scope boundaries rather than claimed features.
 
 ## License
 
-No license file is currently included. All rights remain with the author unless a license is added.
+[MIT](LICENSE)

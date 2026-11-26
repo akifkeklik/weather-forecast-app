@@ -1,4 +1,4 @@
-import { WeatherError } from '../types/accuweather';
+import { WeatherError } from '../types/weather';
 
 export class ApiError extends Error {
   constructor(

@@ -1,4 +1,4 @@
-import { CacheEntry } from "../types/accuweather";
+import { CacheEntry } from "../types/weather";
 
 export class CacheManager {
   private store = new Map<string, CacheEntry<unknown>>();
