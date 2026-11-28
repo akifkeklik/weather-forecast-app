@@ -1,206 +1,98 @@
-# Weather Dashboard
+<div align="center">
 
-A small full-stack weather dashboard built with Next.js App Router, React, and TypeScript. It shows current conditions and a five-day forecast for a city from OpenWeather and keeps the provider credential on the server.
+<img src="app/icon.svg" alt="Weather app icon" width="72" />
 
-This is a portfolio project focused on clear request boundaries, typed data handling, resilient API integration, and a responsive Turkish-language interface.
+# Weather Forecast
+
+**Current weather and a five-day forecast for any city, in Turkish.**
+
+[![Weather App CI](https://github.com/akifkeklik/weather-forecast-app/actions/workflows/ci.yml/badge.svg)](https://github.com/akifkeklik/weather-forecast-app/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+![Next.js](https://img.shields.io/badge/Next.js-16-000000?logo=next.js)
+![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white)
+
+<img src="docs/screenshots/desktop-light.png" alt="İzmir: current weather and a five-day forecast" width="100%" />
+
+</div>
+
+<table>
+<tr>
+<td width="62%"><img src="docs/screenshots/desktop-dark.png" alt="Dark theme" /></td>
+<td width="38%"><img src="docs/screenshots/phone.png" alt="Phone layout" /></td>
+</tr>
+</table>
+
+<sub>Screenshots use sample data in place of a live API response.</sub>
 
 ## What it does
 
-- Searches weather by city.
-- Displays temperature, condition, humidity, wind speed, and the provider's observation time.
-- Shows a five-day forecast: daily low and high, condition and chance of precipitation, grouped by the city's own calendar day.
-- Weather descriptions come back in Turkish (`lang=tr`) to match the interface.
-- Supports light and dark themes.
-- Calls OpenWeather only from the server-side API client; the API key is not sent to the browser.
-- Uses an in-memory TTL cache with a maximum of 500 entries per application process.
-- Coalesces simultaneous requests for the same city and limits concurrent upstream lookups.
-- Applies an upstream request timeout and maps provider/network failures to controlled API errors.
-- Cancels superseded browser requests and validates API response data before rendering.
+- Current temperature, condition, humidity, wind and observation time.
+- **Five-day forecast:** daily low and high, condition and chance of rain, grouped by the city's own calendar day.
+- Light and dark themes, phone layout, Turkish descriptions from the provider.
 
-> The cache is process-local and is not shared between multiple server instances.
+## How it is built
 
-## Architecture
-
-```text
-Browser
-  |
-  | GET /api/weather?city=Izmir
-  v
-Next.js Route Handler
-  |
-  v
-Weather Service --------------------+
-  |                                 |
-  | cache hit                       | cache miss
-  v                                 v
-Cached response               OpenWeather client
-                                    |
-                                    v
-                              OpenWeather API
-
-Client UI:
-  Page -> useWeather hook -> typed SearchBar / WeatherCard
+```mermaid
+flowchart LR
+    UI["Page · useWeather hook"] -- "GET /api/weather?city=" --> RH["Route handler"]
+    RH --> SVC["Weather service<br/>validation · cache · coalescing"]
+    SVC -- "current + forecast in parallel" --> OW["OpenWeather API"]
 ```
 
-| Layer | Location | Responsibility |
-| --- | --- | --- |
-| Route handler | `app/api/weather/route.ts` | HTTP boundary and error response |
-| Service | `lib/services/weather.ts` | Input validation, cache lookup, request coalescing |
-| Provider client | `lib/clients/openweather.ts` | Current and forecast calls, timeout, provider response validation |
-| Forecast | `lib/services/forecast.ts` | Turns 3-hour slots into days in the city's time zone |
-| Cache | `lib/utils/cache.ts` | Bounded in-memory TTL/LRU cache |
-| Types | `lib/types/weather.ts` | Shared response and error contracts |
-| UI hook | `app/hooks/useWeather.ts` | Request lifecycle, cancellation, client-side validation |
-| Components | `app/components` | Search form, current weather, forecast, theme controls |
+| Decision | Why |
+|---|---|
+| The API key stays on the server | The browser only talks to `/api/weather`; the key is never in client code. |
+| Cache with TTL and LRU (500 cities) | Repeated searches do not cost provider calls. |
+| Concurrent searches for one city share a request | Ten users searching "İzmir" at once make one provider call. At most 50 different cities in flight. |
+| 8-second timeout, mapped errors | Provider failures become clear 4xx/5xx answers; raw provider messages and the key never leak. |
+| Forecast failure does not hide current weather | Both calls run in parallel; if only the forecast fails, current weather is shown and that answer is not cached. |
+| Days in the city's time zone | OpenWeather returns 3-hour UTC slots; they are grouped by the city's local date. Partial days are dropped rather than show a wrong low and high. |
+| Stale responses are ignored | A new search cancels the previous request in the browser. |
 
-## Technology
+## Run locally
 
-- Next.js App Router
-- React
-- TypeScript (strict mode)
-- OpenWeather Current Weather and 5 day / 3 hour Forecast APIs (free plan)
-- CSS / Tailwind utility classes
-- ESLint 9 and Vitest
-
-## Requirements
-
-- Node.js 24 or newer (the CI pipeline uses Node 24)
-- npm
-
-## Getting started
-
-1. Clone the repository:
-
-   ```bash
-   git clone https://github.com/akifkeklik/weather-forecast-app.git
-   cd weather-forecast-app
-   ```
-
-2. Install the exact dependency versions from the lockfile:
-
-   ```bash
-   npm ci
-   ```
-
-3. Create a local environment file:
-
-   **PowerShell**
-   ```powershell
-   Copy-Item .env.example .env.local
-   ```
-
-   **macOS / Linux**
-   ```bash
-   cp .env.example .env.local
-   ```
-
-4. Add your OpenWeather API key to `.env.local`:
-
-   ```env
-   OPENWEATHER_API_KEY=your_api_key
-   WEATHER_CACHE_TTL_MINUTES=30
-   LOG_LEVEL=info
-   ```
-
-   Obtain a key from [OpenWeather](https://openweathermap.org/api). Never commit `.env.local` or expose the key through a `NEXT_PUBLIC_*` variable.
-
-5. Start the development server:
-
-   ```bash
-   npm run dev
-   ```
-
-   Open [http://localhost:3000](http://localhost:3000).
-
-## Production build
+Requires Node.js 24 and an [OpenWeather](https://openweathermap.org/api) key (the free plan covers both endpoints).
 
 ```bash
-npm test
-npm run lint
-npm run typecheck
-npm run build
-npm start
+npm ci
+cp .env.example .env.local   # set OPENWEATHER_API_KEY
+npm run dev                  # http://localhost:3000
 ```
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `OPENWEATHER_API_KEY` | required | Provider key, server only |
+| `WEATHER_CACHE_TTL_MINUTES` | `30` | Cache lifetime |
+| `LOG_LEVEL` | `info` | `error`, `warn`, `info` or `debug` |
 
 ## API
 
-### `GET /api/weather?city={city}`
-
-Example:
-
-```bash
-curl "http://localhost:3000/api/weather?city=Izmir"
-```
-
-Successful response:
-
-```json
-{
-  "city": "Izmir",
-  "temperature": 22,
-  "weatherText": "açık",
-  "humidity": 48,
-  "windSpeed": 10,
-  "observationTime": "2026-11-14T10:00:00.000Z",
-  "forecast": [
-    {
-      "date": "2026-11-15",
-      "min": 14,
-      "max": 23,
-      "weatherText": "parçalı bulutlu",
-      "condition": "Clouds",
-      "precipitationChance": 20
-    }
-  ]
-}
-```
-
-The values above are illustrative; live values depend on the provider response.
+`GET /api/weather?city=Izmir` returns current weather and `forecast` (empty if only the forecast call failed).
 
 | Status | Meaning |
-| --- | --- |
-| `200` | Current weather returned; `forecast` is empty if only the forecast call failed |
+|---|---|
+| `200` | Weather returned |
 | `400` | Missing or invalid city |
-| `404` | City not found by provider |
+| `404` | City not found |
 | `429` | Provider rate limit |
-| `502` | Provider/network failure or invalid upstream response |
-| `503` | Local concurrent lookup limit reached |
-| `500` | Server configuration or unexpected error |
+| `502` | Provider unreachable or invalid response |
+| `503` | Too many different cities in flight; retry |
 
-Responses use `Cache-Control: no-store` at the HTTP layer because freshness is managed explicitly by the service cache.
-
-## Automated tests
-
-Run the unit tests with:
+## Tests
 
 ```bash
-npm test
+npm test && npm run lint && npm run typecheck && npm run build
 ```
 
-The Vitest suite (25 tests) covers cache TTL expiry and LRU eviction, city input validation, cache reuse, request coalescing and the concurrency limit, the OpenWeather client (status mapping, no key leaks, malformed payloads), grouping forecast slots into local days, the degraded path when only the forecast fails, and the browser-side response check.
+25 tests on every pull request: forecast grouping by local day, the OpenWeather client (status mapping, no key in
+errors, malformed data), cache expiry and eviction, request coalescing and the concurrency limit, the degraded path
+when only the forecast fails, and the browser-side response check.
 
-## Configuration
+## Limits
 
-| Variable | Required | Default | Purpose |
-| --- | --- | --- | --- |
-| `OPENWEATHER_API_KEY` | Yes | — | Server-side provider credential |
-| `WEATHER_CACHE_TTL_MINUTES` | No | `30` | In-memory cache lifetime |
-| `LOG_LEVEL` | No | `info` | Application log verbosity |
-
-## Engineering notes and trade-offs
-
-- **Process-local cache:** the cache is bounded to 500 entries and uses TTL plus least-recently-used eviction. It is suitable for a small single-instance deployment, not a horizontally scaled production system. A shared Redis cache would be needed for cross-instance consistency.
-- **Request coalescing:** concurrent lookups for the same normalized city share one upstream request. A limit of 50 distinct in-flight lookups protects the provider integration from unbounded concurrency within one process.
-- **Cancellation:** when a user starts a new search, the previous browser request is aborted. This prevents stale responses from replacing newer results.
-- **Validation:** provider payloads and browser-facing responses are checked before use; external API errors are not forwarded verbatim.
-- **Freshness:** the timestamp shown is the observation timestamp supplied by the weather provider, not the time the browser requested the data.
-- **Forecast days:** OpenWeather's free forecast is 40 three-hour slots. They are grouped by the city's local date (using the offset the provider returns), today is left to the current-weather card, and a day with fewer than four slots is dropped instead of showing a misleading low and high. The day's description comes from the slot nearest local noon.
-- **Partial failure:** current weather and forecast are fetched in parallel. If only the forecast fails, the current weather is still returned, the failure is logged, and the answer is not cached so the next search tries again.
-
-## Current scope
-
-It does not provide hourly charts, location search by coordinates, persistent or distributed caching, user accounts, or a production observability stack. Those are deliberate scope boundaries rather than claimed features.
+The cache lives in one server process; several instances would need a shared cache such as Redis. No hourly view,
+no location search by coordinates, no accounts.
 
 ## License
 
-[MIT](LICENSE)
+[MIT](LICENSE) · Built by [Akif Keklik](https://github.com/akifkeklik)
