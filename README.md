@@ -65,6 +65,12 @@ npm run dev                  # http://localhost:3000
 | `WEATHER_CACHE_TTL_MINUTES` | `30` | Cache lifetime |
 | `LOG_LEVEL` | `info` | `error`, `warn`, `info` or `debug` |
 
+## Deploy
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fakifkeklik%2Fweather-forecast-app&env=OPENWEATHER_API_KEY&envDescription=Free%20OpenWeather%20API%20key&envLink=https%3A%2F%2Fhome.openweathermap.org%2Fapi_keys&project-name=weather-forecast-app)
+
+Vercel asks for `OPENWEATHER_API_KEY` during setup; nothing else is needed. The key stays a server-side variable.
+
 ## API
 
 `GET /api/weather?city=Izmir` returns current weather and `forecast` (empty if only the forecast call failed).
