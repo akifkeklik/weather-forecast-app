@@ -49,7 +49,7 @@ export default function WeatherCard({ data }: WeatherCardProps) {
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         <div className="metric-chip">
           <span className="label">Nem</span>
-          <span className="value">{data.humidity}%</span>
+          <span className="value">%{data.humidity}</span>
         </div>
         <div className="metric-chip">
           <span className="label">Rüzgar</span>
