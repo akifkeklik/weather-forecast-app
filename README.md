@@ -6,6 +6,8 @@
 
 **Current weather and a five-day forecast for any city, in Turkish.**
 
+**[Live demo → weather-forecast-app-gamma-seven.vercel.app](https://weather-forecast-app-gamma-seven.vercel.app)**
+
 [![Weather App CI](https://github.com/akifkeklik/weather-forecast-app/actions/workflows/ci.yml/badge.svg)](https://github.com/akifkeklik/weather-forecast-app/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 ![Next.js](https://img.shields.io/badge/Next.js-16-000000?logo=next.js)
@@ -64,12 +66,6 @@ npm run dev                  # http://localhost:3000
 | `OPENWEATHER_API_KEY` | required | Provider key, server only |
 | `WEATHER_CACHE_TTL_MINUTES` | `30` | Cache lifetime |
 | `LOG_LEVEL` | `info` | `error`, `warn`, `info` or `debug` |
-
-## Deploy
-
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fakifkeklik%2Fweather-forecast-app&env=OPENWEATHER_API_KEY&envDescription=Free%20OpenWeather%20API%20key&envLink=https%3A%2F%2Fhome.openweathermap.org%2Fapi_keys&project-name=weather-forecast-app)
-
-Vercel asks for `OPENWEATHER_API_KEY` during setup; nothing else is needed. The key stays a server-side variable.
 
 ## API
 
